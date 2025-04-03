@@ -1,3 +1,4 @@
+import ctypes
 import os
 import sys
 import json
@@ -570,18 +571,22 @@ class SecurityScannerGUI:
                 "Some features may be limited or unavailable. For complete scanning capabilities, "
                 "please restart the application with administrator rights."
             )
-            
+
+    def _update_system_info_ui(self, hostname, os_name):
+        """Update the UI with system info (called from main thread)"""
+        self.system_info_label.config(text=f"Hostname: {hostname} | OS: {os_name}")
+
     def update_system_info(self):
         """Update system info in background thread"""
         try:
             system_info = get_system_info()
             hostname = system_info.get("hostname", "Unknown")
             os_name = system_info.get("os_edition", system_info.get("os_name", "Unknown"))
-            
-            # Update UI in main thread
-            self.root.after(0, lambda: self.system_info_label.config(
-                text=f"Hostname: {hostname} | OS: {os_name}"
-            ))
+
+            # Use a queue or event to signal the main thread
+            self.queue.put((hostname, os_name))
+            # Or directly schedule the update using after
+            self.root.after(0, lambda: self._update_system_info_ui(hostname, os_name))
         except Exception as e:
             print(f"Error getting system info: {e}")
             
@@ -731,22 +736,18 @@ class SecurityScannerGUI:
             if scan_type == "quick":
                 self.log("Performing quick system health check...")
                 self.scan_results = quick_system_health_check(
-                    progress_callback=self.update_scan_progress
                 )
                 
             elif scan_type == "directory":
                 directory = self.directory_var.get()
                 self.log(f"Scanning directory: {directory}")
                 self.scan_results = run_directory_scan(
-                    directory,
-                    progress_callback=self.update_scan_progress
+                    directory
                 )
                 
             elif scan_type == "full":
                 self.log("Performing full system scan. This may take a while...")
-                self.scan_results = run_full_system_scan(
-                    progress_callback=self.update_scan_progress
-                )
+                self.scan_results = run_full_system_scan()
                 
             # Update UI with results
             self.root.after(0, self.display_scan_results)
@@ -960,6 +961,9 @@ class SecurityScannerGUI:
 
 # Main execution
 if __name__ == "__main__":
+    if not is_admin():
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        sys.exit()
     root = tk.Tk()
     app = SecurityScannerGUI(root)
     root.mainloop()
