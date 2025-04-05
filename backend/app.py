@@ -8,9 +8,12 @@ from flask_migrate import Migrate
 import os
 import secrets
 from database import db
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
+
+    CORS(app)
     
     # Database Configuration
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///app.db")
