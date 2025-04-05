@@ -1,16 +1,14 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+
 import './App.css'
+import AuthForm from "@/pages/AuthForm.tsx";
+import '@fontsource/open-sans/400.css'; // Regular weight
+import '@fontsource/open-sans/600.css'; // Semi-Bold weight
+import '@fontsource/open-sans/700.css'; // Bold weight
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <h1 className={"text-3xl font-bold underline"}>Hello World </h1>
-    </>
-  )
+    return (
+            <AuthForm />
+    )
 }
 
 export default App
