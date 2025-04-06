@@ -7,53 +7,53 @@ import '@fontsource/open-sans/700.css'; // Bold weight
 
 import { useEffect, useState } from 'react';
 import { BrowserRouter,Routes,Route,Navigate } from 'react-router-dom';
-import Dashboard from "@/pages/Dashboard.tsx";
 import DashboardLayout from "@/layouts/dashboardLayout.tsx";
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [authChecked, setAuthChecked] = useState(false); // new state
 
     useEffect(() => {
         const token = localStorage.getItem('authToken');
         if (token) {
             setIsAuthenticated(true);
         }
+        setAuthChecked(true); // indicate check complete
     }, []);
 
+    console.log("Authenticated:", isAuthenticated, "Auth Checked:", authChecked);
 
-    // Function to handle successful login
-    const handleLoginSuccess = (token : string) => {
+    if (!authChecked) return null; // or a loading spinner
+
+    const handleLoginSuccess = (token: string) => {
         localStorage.setItem('authToken', token);
-    }
+        setIsAuthenticated(true); // missing this in your original code
+    };
 
-    // Function to handle logout
-    const handleLoout = () => {
+    const handleLogout = () => {
         localStorage.removeItem('authToken');
         setIsAuthenticated(false);
-    }
-    
+    };
+
     return (
         <BrowserRouter>
             <Routes>
                 <Route
-                    path = '/auth'
-                    element = {
+                    path='/auth'
+                    element={
                         isAuthenticated ?
                             <Navigate to="/dashboard" replace /> :
                             <AuthForm onLoginSuccess={handleLoginSuccess} />
                     }
                 />
-
-                {/* Dashboard Routes - protected by authentication */}
                 <Route
-                    path = '/dashboard'
-                    element = {
+                    path='/dashboard'
+                    element={
                         isAuthenticated ?
-                            <DashboardLayout/> :
+                            <DashboardLayout onLogout={handleLogout} /> :
                             <Navigate to="/auth" replace />
                     }
                 />
-
                 <Route
                     path="/"
                     element={
@@ -62,12 +62,10 @@ function App() {
                             <Navigate to="/auth" replace />
                     }
                 />
-
-                {/* Catch all - redirect to appropriate location */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>
-    )
+    );
 }
 
 export default App

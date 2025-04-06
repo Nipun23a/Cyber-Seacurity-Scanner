@@ -9,16 +9,20 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import {Lock} from "lucide-react";
 
+
 function LoginForm({ onLoginSuccess }: { onLoginSuccess?: (token: string) => void }) {
     const [emailInput, setEmailInput] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string | null>("")
     const [passwordInput, setPasswordInput] = useState<string>("")
 
+
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError(null)
+
 
         try {
             const response = await axios.post("http://localhost:5000/auth/login", {
@@ -29,10 +33,10 @@ function LoginForm({ onLoginSuccess }: { onLoginSuccess?: (token: string) => voi
             console.log(response.data)
 
             // If login is successful and we have a token
-            if (response.data && response.data.token) {
+            if (response.data && response.data.access_token) {
                 // Call the onLoginSuccess callback with the token
                 if (onLoginSuccess) {
-                    onLoginSuccess(response.data.token)
+                    onLoginSuccess(response.data.access_token)
                 }
             }
         } catch (error) {

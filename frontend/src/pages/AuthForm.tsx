@@ -9,6 +9,7 @@ import {Shield} from "lucide-react";
 
 
 
+
 interface AuthFormProps {
     onLoginSuccess?: (token: string) => void;
 }
@@ -18,6 +19,8 @@ export default function AuthForm({ onLoginSuccess }: AuthFormProps) {
     const [isLogin, setIsLogin] = useState<boolean>(true)
     const [passwordStrength, setPasswordStrength] = useState<number>(0)
     const [passwordInput, setPasswordInput] = useState<string>("")
+
+
 
     const toggleForm = () => {
         setIsLogin(!isLogin)

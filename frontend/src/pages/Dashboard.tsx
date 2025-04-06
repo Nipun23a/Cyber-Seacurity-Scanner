@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@radix-ui/react-progress";
-import { ShieldIcon, AlertCircle, HardDrive, Activity, CheckCircle, Zap, Search, Bug, Wifi,Lock
+import { ShieldIcon, AlertCircle, HardDrive, Activity, CheckCircle, Zap
 } from "lucide-react";
 
 function Dashboard() {
