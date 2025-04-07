@@ -10,7 +10,8 @@ import { motion } from "framer-motion";
 import {Lock} from "lucide-react";
 
 
-function LoginForm({ onLoginSuccess }: { onLoginSuccess?: (token: string) => void }) {
+function LoginForm({ onLoginSuccess }: { onLoginSuccess?: (token: string, user: unknown) => void }) {
+
     const [emailInput, setEmailInput] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string | null>("")
@@ -36,19 +37,14 @@ function LoginForm({ onLoginSuccess }: { onLoginSuccess?: (token: string) => voi
             if (response.data && response.data.access_token) {
                 // Call the onLoginSuccess callback with the token
                 if (onLoginSuccess) {
-                    onLoginSuccess(response.data.access_token)
+                    onLoginSuccess(response.data.access_token,response.data.user)
                 }
             }
-        } catch (error) {
-            setError('Invalid credentials, please try again')
-
-            // For development purposes - to bypass backend authentication
-            // Remove this in production
-            if (process.env.NODE_ENV === 'development') {
-                console.log('Development mode: Simulating successful login')
-                if (onLoginSuccess) {
-                    onLoginSuccess('dev-mock-token')
-                }
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                setError(`Invalid credentials, please try again: { ${error.message} }`);
+            } else {
+                setError("An unknown error occurred, please try again.");
             }
         } finally {
             setLoading(false)

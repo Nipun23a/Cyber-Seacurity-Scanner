@@ -11,7 +11,7 @@ import {Shield} from "lucide-react";
 
 
 interface AuthFormProps {
-    onLoginSuccess?: (token: string) => void;
+    onLoginSuccess?: (token: string,user: unknown) => void  ;
 }
 
 // AuthForm component

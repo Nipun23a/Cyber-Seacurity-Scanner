@@ -25,9 +25,10 @@ function App() {
 
     if (!authChecked) return null; // or a loading spinner
 
-    const handleLoginSuccess = (token: string) => {
+    const handleLoginSuccess = (token: string, user: unknown) => {
         localStorage.setItem('authToken', token);
-        setIsAuthenticated(true); // missing this in your original code
+        localStorage.setItem('user', JSON.stringify(user)); // Store user object as string
+        setIsAuthenticated(true);
     };
 
     const handleLogout = () => {
@@ -47,7 +48,7 @@ function App() {
                     }
                 />
                 <Route
-                    path='/dashboard'
+                    path='/dashboard/*'
                     element={
                         isAuthenticated ?
                             <DashboardLayout onLogout={handleLogout} /> :
