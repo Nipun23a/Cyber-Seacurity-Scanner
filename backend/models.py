@@ -12,6 +12,11 @@ class SeverityLevel(Enum):
     HIGH = 'high'
     CRITICAL = 'critical'
 
+class ScanType(Enum):
+    HealthCheck = 'healthcheck'
+    FullScan = 'fullscan'
+    DirectScan = 'directscan'
+
 # User Model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,7 +71,7 @@ class Recommendations(db.Model):
 class Files(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    scan_id = db.Column(db.Integer, db.ForeignKey('scan.id'), nullable=False)
+    scan_type = db.Column(db.Enum(ScanType),nullable=False)
     file_path = db.Column(db.String(255), nullable=False)
     upload_at = db.Column(db.DateTime, default=datetime.utcnow)
 
