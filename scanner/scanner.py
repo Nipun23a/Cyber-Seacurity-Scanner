@@ -10,12 +10,40 @@ import sys
 from datetime import datetime
 import ctypes
 from colorama import init, Fore, Style
-
+import jwt
 # Initialize colorama for colored console output
 init()
 
 # Flask Backend URL
 BACKEND_URL = "http://127.0.0.1:5000"  # Change this to your actual backend URL
+TOKEN = ""
+
+
+def login(username,password):
+    """Login to get authentication token"""
+    try:
+        response = requests.post(BACKEND_URL + "auth/login", json={"username": username, "password": password})
+        data = response.json()
+        if data.get("access_token"):
+            global TOKEN
+            TOKEN = data["access_token"]
+            return True
+        return False
+    except Exception as e:
+        print(f"{Fore.RED}[!] Login error: {str(e)}{Style.RESET_ALL}")
+        return False
+
+def test_backend_connection(backend_url):
+    """ Test connection to backend """
+    try:
+        url = backend_url or BACKEND_URL
+        response = requests.get(f"{url}/test-connection",timeout=10)
+        return response.json().get('success',False)
+    except Exception as e:
+        print(f"{Fore.RED}[!] Connection test failed: {str(e)}{Style.RESET_ALL}")
+        return False
+
+
 
 
 # Function: Check if running as administrator
@@ -303,15 +331,41 @@ def check_firewall_status():
 
 
 # Function: Send Scan Data to Backend
-def upload_scan_results(data):
+def upload_scan_results(data, backend_url=None):
+    """Upload scan results to server"""
     try:
+        url = backend_url or BACKEND_URL
+        headers = {"Authorization": f"Bearer {TOKEN}"}
+
+        # Prepare data structure
+        upload_data = {
+            "scan_type": data.get("scan_type", "custom_scan"),
+            "results": data.get("results", {}),
+            "files": []
+        }
+
+        # Add files if any
+        if "scanned_files" in data:
+            for file_path in data["scanned_files"]:
+                upload_data["files"].append({"path": file_path})
+
         print(f"{Fore.CYAN}[*] Uploading scan results to server...{Style.RESET_ALL}")
-        response = requests.post(f"{BACKEND_URL}/scan/upload", json=data, timeout=30)
-        return response.json()
+        response = requests.post(
+            f"{url}/scan/upload",
+            json=upload_data,
+            headers=headers,
+            timeout=30
+        )
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            error_data = response.json()
+            return {"success": False, "error": error_data.get("error", "Unknown error")}
+
     except Exception as e:
         print(f"{Fore.RED}[!] Error uploading results: {str(e)}{Style.RESET_ALL}")
-        return {"error": str(e)}
-
+        return {"success": False, "error": str(e)}
 
 # Function: Save scan results to local file
 def save_scan_results(data, filename=None):
