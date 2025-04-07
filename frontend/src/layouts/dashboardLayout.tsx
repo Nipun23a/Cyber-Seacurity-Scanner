@@ -38,9 +38,10 @@ export default function DashboardLayout({ children, onLogout }: DashboardLayoutP
                     <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/profile" element={<ProfileSection />} />
+                        
                         {/* Add more routes for other sections as needed */}
                     </Routes>
-                    {!children && <Dashboard />}
+                    {!children}
                 </main>
             </div>
         </div>
