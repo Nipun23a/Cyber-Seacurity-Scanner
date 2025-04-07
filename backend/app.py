@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 
+from routes.upload import upload_bp
 from routes.download import download_bp
 from routes.auth import auth_bp
 from flask_migrate import Migrate
@@ -34,13 +35,20 @@ def create_app():
     
     # Import and register blueprints
     app.register_blueprint(auth_bp, url_prefix="/auth")
-    app.register_blueprint(download_bp)
+    app.register_blueprint(download_bp, url_prefix="/download")
+    app.register_blueprint(upload_bp, url_prefix="/scan")
     
     @app.route('/')
     def home():
         return jsonify({"message": "Hello World!"})
+
+    @app.route('/test-connection', methods=['GET'])
+    def test_connection():
+        return jsonify({"success": True, "message": "Connection successful"})
         
     return app
+
+
 
 if __name__ == "__main__":
     app = create_app()
