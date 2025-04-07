@@ -39,8 +39,15 @@ def login():
         
     # Convert user.id to string
     access_token = create_access_token(identity=str(user.id), expires_delta=timedelta(days=1))
+
+    user_info = {
+        "id": user.id,
+        "full_name": user.full_name,
+        "email": user.email,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+    }
     
-    return jsonify({"message": "Login successful", "access_token": access_token}), 200
+    return jsonify({"message": "Login successful", "access_token": access_token,"user":user_info}), 200
 
 @auth_bp.route("/protected", methods=["GET"])
 @jwt_required()
@@ -50,3 +57,48 @@ def protected():
     # user_id = int(current_user)
     
     return jsonify({"message": f"Hello User {current_user}, you are authenticated!"}), 200
+
+@auth_bp.route("/change-password", methods=["POST"])
+@jwt_required()
+def change_password():
+    user_id = get_jwt_identity()
+    
+    try:
+        # Debug: print incoming data
+        print("Request data:", request.data)
+        
+        data = request.get_json()
+        if data is None:
+            return jsonify({"error": "Invalid JSON format"}), 422
+            
+        print("Parsed JSON data:", data)
+        
+        old_password = data.get('oldPassword')
+        new_password = data.get('newPassword')
+        confirm_password = data.get('confirmPassword')
+        
+        print(f"Passwords received: old={bool(old_password)}, new={bool(new_password)}, confirm={bool(confirm_password)}")
+       
+        # Validate input
+        if not old_password or not new_password or not confirm_password:
+            return jsonify({"error": "All password fields are required"}), 400
+           
+        if new_password != confirm_password:
+            return jsonify({"error": "New passwords do not match"}), 400
+       
+        # Find user and verify old password
+        user = User.query.get(int(user_id))
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+           
+        if not user.check_password(old_password):
+            return jsonify({"error": "Current password is incorrect"}), 401
+       
+        # Update password
+        user.set_password(new_password)
+        db.session.commit()
+       
+        return jsonify({"message": "Password updated successfully"}), 200
+    except Exception as e:
+        print(f"Error in change_password: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
