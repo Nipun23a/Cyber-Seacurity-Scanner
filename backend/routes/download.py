@@ -4,7 +4,7 @@ import os
 
 download_bp = Blueprint('download', __name__)
 
-@download_bp.route('/download/scannerGUI.exe', methods=["GET"])
+@download_bp.route('/scannerGUI.exe', methods=["GET"])
 @jwt_required()
 def download_scanner_exe():
     try:
@@ -18,3 +18,4 @@ def download_scanner_exe():
     except Exception as e:
         current_app.logger.error(f"Download error: {str(e)}")
         abort(500)
+
