@@ -17,7 +17,7 @@ from scanner import (
     get_system_info, get_defender_status, check_firewall_status,
     scan_open_ports, scan_installed_software, scan_files, is_admin,
     run_full_system_scan, save_scan_results, upload_scan_results,
-    quick_system_health_check, run_directory_scan, update_progress
+    quick_system_health_check, run_directory_scan, update_progress, test_backend_connection
 )
 
 class SecurityScannerGUI:
@@ -26,10 +26,18 @@ class SecurityScannerGUI:
         self.root.title("Windows Security Scanner")
         self.root.geometry("1000x700")
         self.root.minsize(900, 650)
-        
+        # Backend Connection settings and authentication
+        self.backend_url_var = tk.StringVar(value="http://localhost:5000")
+        self.username_var = tk.StringVar()
+        self.password_var = tk.StringVar()
+        self.authenticated = False
+
         # Apply modern theme
         self.theme = ttkth.ThemedStyle(self.root)
         self.theme.set_theme("arc")  # Modern flat theme
+
+
+
         
         # Set icon
         try:
@@ -123,6 +131,34 @@ class SecurityScannerGUI:
         
         # Update system info in background
         threading.Thread(target=self.update_system_info, daemon=True).start()
+
+    def login(self):
+        """Login to backend server"""
+        try:
+            username = self.username_var.get()
+            password = self.password_var.get()
+            backend_url = self.backend_url_var.get()
+
+            self.log(f"Attempting to login as {username}")
+            self.status_bar.config(text="Logging in...")
+
+            # Try to login
+            if login(username, password):
+                self.authenticated = True
+                self.log("Login successful")
+                self.status_bar.config(text="Logged in")
+                messagebox.showinfo("Login", "Successfully logged in to the server.")
+                # Enable scan upload buttons
+                # ... enable UI elements ...
+            else:
+                self.log("Login failed")
+                self.status_bar.config(text="Login failed")
+                messagebox.showerror("Login Failed", "Invalid username or password.")
+        except Exception as e:
+            self.log(f"Login error: {str(e)}")
+            messagebox.showerror("Login Error", f"Failed to login: {str(e)}")
+
+
         
     def create_dashboard(self):
         """Create dashboard tab content"""
@@ -918,16 +954,31 @@ class SecurityScannerGUI:
             return
             
         self.upload_scan_results_to_server()
-        
+
     def upload_scan_results_to_server(self):
         """Upload scan results to configured server"""
         try:
+            if not self.authenticated:
+                messagebox.showwarning("Authentication Required", "Please login first.")
+                return
+
+            if not self.scan_results:
+                messagebox.showwarning("No Data", "No scan results to upload.")
+                return
+
             backend_url = self.backend_url_var.get()
             self.log(f"Uploading results to server: {backend_url}")
             self.status_bar.config(text="Uploading results...")
-            
-            response = upload_scan_results(self.scan_results, backend_url)
-            
+
+            # Format the scan data
+            scan_data = {
+                "scan_type": self.scan_type,  # 'full_health', 'full_scan', or 'custom_scan'
+                "results": self.scan_results,
+                "scanned_files": self.scanned_files if hasattr(self, 'scanned_files') else []
+            }
+
+            response = upload_scan_results(scan_data, backend_url)
+
             if response.get("success"):
                 self.log("Results uploaded successfully.")
                 self.status_bar.config(text="Results uploaded successfully.")
@@ -939,20 +990,24 @@ class SecurityScannerGUI:
         except Exception as e:
             self.log(f"Error uploading results: {str(e)}")
             messagebox.showerror("Upload Error", f"Failed to upload results: {str(e)}")
-            
+
     def test_backend_connection(self):
         """Test connection to backend server"""
         try:
             backend_url = self.backend_url_var.get()
             self.status_bar.config(text=f"Testing connection to {backend_url}...")
-            
-            # Implement a test connection function in security_scanner module
-            # For now, we'll just show a mockup response
-            messagebox.showinfo("Connection Test", "Successfully connected to the backend server.")
-            self.status_bar.config(text="Connection test successful.")
+
+            if test_backend_connection(backend_url):
+                self.log(f"Connection to {backend_url} successful")
+                self.status_bar.config(text="Connection test successful.")
+                messagebox.showinfo("Connection Test", "Successfully connected to the backend server.")
+            else:
+                self.log(f"Connection to {backend_url} failed")
+                self.status_bar.config(text="Connection test failed.")
+                messagebox.showerror("Connection Failed", "Could not connect to the backend server.")
         except Exception as e:
+            self.log(f"Connection test error: {str(e)}")
             messagebox.showerror("Connection Failed", f"Failed to connect: {str(e)}")
-            self.status_bar.config(text="Connection test failed.")
             
     def apply_settings(self):
         """Apply the current settings"""
