@@ -20,6 +20,7 @@ def create_app():
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///app.db")
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["UPLOAD_FOLDER"] = 'uploads'
     
     # Generate a secure JWT secret key
     app.config["JWT_SECRET_KEY"] = secrets.token_hex(32)  # Secure secret key

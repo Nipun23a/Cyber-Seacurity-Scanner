@@ -1,59 +1,84 @@
 from flask import Blueprint, request, jsonify
 from database import db
-from flask_jwt_extended import jwt_required,get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity
 import os
+import traceback
+import json
+from werkzeug.utils import secure_filename
+from flask import jsonify, request
+from datetime import datetime
+import traceback
+
 
 from werkzeug.utils import secure_filename
 
 from models import Scan
 from models import Files
 
-upload_bp = Blueprint('upload',__name__)
+upload_bp = Blueprint('upload', __name__)
 
-@upload_bp.route('/upload',methods=['POST'])
-@jwt_required
+
+@upload_bp.route('/upload', methods=['POST'])
+@jwt_required()
+
+
 def upload_scan():
     current_user_id = get_jwt_identity()
     try:
-        data = request.json
-        if not data:
-            return jsonify({"success": False,"error":"No data provided"}),400
+        print(f"[Upload] Starting upload process for user {current_user_id}")
 
-        # Extract scan type from data
-        scan_type = data('scan_type')
-        if scan_type not in ['full_health','full_scan','custom_scan']:
-            return jsonify({"success": False,"error":"Invalid scan type"}),400
+        if not request.data:
+            print("[Upload] Error: No data provided in request")
+            return jsonify({"success": False, "error": "No data provided in request"}), 400
 
-        new_scan = Scan(
+        if not request.is_json:
+            print(f"[Upload] Error: Invalid content type - {request.content_type}")
+            return jsonify({"success": False,
+                            "error": f"Expected content type 'application/json', got '{request.content_type}'"}), 415
+
+        data = request.get_json()
+        if data is None:
+            print("[Upload] Error: Invalid JSON format")
+            return jsonify({"success": False, "error": "Invalid JSON format"}), 400
+
+        # Check for required fields
+        if 'scan_type' not in data:
+            print("[Upload] Error: Missing scan_type field")
+            return jsonify({"success": False, "error": "Missing required field: scan_type"}), 422
+
+        if 'scan_result' not in data:
+            print("[Upload] Error: Missing scan_result field")
+            return jsonify({"success": False, "error": "Missing required field: scan_result"}), 422
+
+        scan_type = data['scan_type']
+        scan_result = data['scan_result']
+
+        if scan_type not in ['quick', 'directory', 'full']:
+            print(f"[Upload] Error: Invalid scan type - {scan_type}")
+            return jsonify({"success": False, "error": f"Invalid scan type: {scan_type}"}), 422
+
+        # Store the scan result as a JSON string
+        scan_result_json = json.dumps(scan_result)
+
+        # Create and save the new file record
+        new_file = Files(
             user_id=current_user_id,
             scan_type=scan_type,
-            results=data.get('results')
+            scan_result=scan_result_json  # Store the scan result as JSON string
         )
-        db.session.add(new_scan)
-        db.session.flush()  # Flush to get the scan ID
-
-        # If there are files associated with the scan
-        if 'files' in data and isinstance(data['files'], list):
-            for file_info in data['files']:
-                file_path = file_info.get('path')
-                if file_path:
-                    new_file = Files(
-                        user_id=current_user_id,
-                        scan_id=new_scan.id,
-                        file_path=secure_filename(file_path)
-                    )
-                    db.session.add(new_file)
-
+        db.session.add(new_file)
         db.session.commit()
+
+        print(f"[Upload] Successfully saved scan result to database")
 
         return jsonify({
             "success": True,
-            "scan_id": new_scan.id,
             "message": "Scan results uploaded successfully"
         })
 
     except Exception as e:
         db.session.rollback()
+        error_traceback = traceback.format_exc()
+        print(f"[Upload] Error in upload_scan: {str(e)}")
+        print(f"[Upload] Traceback: {error_traceback}")
         return jsonify({"success": False, "error": str(e)}), 500
-
-

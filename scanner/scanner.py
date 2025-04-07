@@ -1,5 +1,7 @@
 import os
 import hashlib
+import tempfile
+
 import requests
 import socket
 import subprocess
@@ -19,19 +21,45 @@ BACKEND_URL = "http://127.0.0.1:5000"  # Change this to your actual backend URL
 TOKEN = ""
 
 
-def login(username,password):
-    """Login to get authentication token"""
+def login(email, password, backend_url=None):
+    """Authenticate with backend server and get JWT token"""
     try:
-        response = requests.post(BACKEND_URL + "auth/login", json={"username": username, "password": password})
-        data = response.json()
-        if data.get("access_token"):
-            global TOKEN
-            TOKEN = data["access_token"]
-            return True
-        return False
+        url = backend_url or BACKEND_URL
+        print(f"Attempting to connect to: {url}")
+
+        response = requests.post(
+            f"{url}/auth/login",
+            json={"email": email, "password": password},
+            timeout=10
+        )
+
+        # Print response status and content for debugging
+        print(f"Status code: {response.status_code}")
+        print(f"Response content: {response.content[:100]}")  # Print first 100 chars to avoid large output
+
+        # Check if response has content before trying to parse JSON
+        if response.content:
+            try:
+                data = response.json()
+                if response.status_code == 200:
+                    global TOKEN
+                    TOKEN = data.get("access_token")
+                    print(f"JWT token: {TOKEN}")
+                    return True, None
+                else:
+                    error_msg = data.get("error", "Authentication failed")
+                    return False, error_msg
+            except json.JSONDecodeError as e:
+                return False, f"Invalid response from server: {str(e)}"
+        else:
+            return False, "Server returned empty response"
+
+    except requests.exceptions.ConnectionError:
+        return False, "Could not connect to server. Please check the server URL and ensure the server is running."
+    except requests.exceptions.Timeout:
+        return False, "Connection timed out. Server may be overloaded or unreachable."
     except Exception as e:
-        print(f"{Fore.RED}[!] Login error: {str(e)}{Style.RESET_ALL}")
-        return False
+        return False, f"Error: {str(e)}"
 
 def test_backend_connection(backend_url):
     """ Test connection to backend """
@@ -330,42 +358,6 @@ def check_firewall_status():
         return {"error": "Could not retrieve firewall status"}
 
 
-# Function: Send Scan Data to Backend
-def upload_scan_results(data, backend_url=None):
-    """Upload scan results to server"""
-    try:
-        url = backend_url or BACKEND_URL
-        headers = {"Authorization": f"Bearer {TOKEN}"}
-
-        # Prepare data structure
-        upload_data = {
-            "scan_type": data.get("scan_type", "custom_scan"),
-            "results": data.get("results", {}),
-            "files": []
-        }
-
-        # Add files if any
-        if "scanned_files" in data:
-            for file_path in data["scanned_files"]:
-                upload_data["files"].append({"path": file_path})
-
-        print(f"{Fore.CYAN}[*] Uploading scan results to server...{Style.RESET_ALL}")
-        response = requests.post(
-            f"{url}/scan/upload",
-            json=upload_data,
-            headers=headers,
-            timeout=30
-        )
-
-        if response.status_code == 200:
-            return response.json()
-        else:
-            error_data = response.json()
-            return {"success": False, "error": error_data.get("error", "Unknown error")}
-
-    except Exception as e:
-        print(f"{Fore.RED}[!] Error uploading results: {str(e)}{Style.RESET_ALL}")
-        return {"success": False, "error": str(e)}
 
 # Function: Save scan results to local file
 def save_scan_results(data, filename=None):
@@ -437,15 +429,73 @@ def run_directory_scan(directory):
 
     # Collect all scan results
     scan_results = {
-        "system_info": get_system_info(),
-        "defender_status": get_defender_status(),
-        "firewall_status": check_firewall_status(),
-        "open_ports": scan_open_ports(),
-        "installed_software": scan_installed_software(),
         "directory_scan": scan_files(directory, update_progress)
     }
 
     return scan_results
+
+# Function: Send Scan Data to Backend
+def upload_scan_results(scan_result, scan_type):
+    headers = {}
+
+    # Handle Authorization header using internal TOKEN constant
+    if TOKEN:
+        headers['Authorization'] = TOKEN if TOKEN.startswith("Bearer ") else f"Bearer {TOKEN}"
+    else:
+        print("WARNING: No auth token provided - authentication will fail!")
+
+    try:
+        # Prepare the JSON data directly
+        json_data = {
+            'scan_type': scan_type,
+            'scan_result': scan_result,
+        }
+
+        print("Creating JSON data:", json_data)
+        # Endpoint
+        endpoint = f"{BACKEND_URL.rstrip('/')}/scan/upload"
+
+        # Set content type to application/json
+        headers['Content-Type'] = 'application/json'
+
+        # Debug
+        print(f"Sending data to: {endpoint}")
+        print(f"Headers: {headers}")
+
+        # Send POST request with JSON data
+        response = requests.post(
+            endpoint,
+            headers=headers,
+            json=json_data  # Use json parameter to automatically serialize
+        )
+
+        # Debug
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {response.text}")
+
+        if response.status_code == 401:
+            return {
+                "success": False,
+                "error": "Authentication failed. Your session may have expired. Please login again."
+            }
+
+        try:
+            result = response.json()
+        except json.JSONDecodeError:
+            return {
+                "success": False,
+                "error": f"Server returned non-JSON response: {response.text}"
+            }
+
+        if response.status_code in (200, 201):
+            return result
+        else:
+            return {"success": False, "error": result.get("error", f"HTTP Error: {response.status_code}")}
+
+    except requests.RequestException as e:
+        return {"success": False, "error": f"Request failed: {str(e)}"}
+    except Exception as e:
+        return {"success": False, "error": f"Unknown error: {str(e)}"}
 
 
 # Function: Get quick system health check

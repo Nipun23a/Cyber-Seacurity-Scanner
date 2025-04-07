@@ -16,53 +16,63 @@ import ttkthemes as ttkth
 from scanner import (
     get_system_info, get_defender_status, check_firewall_status,
     scan_open_ports, scan_installed_software, scan_files, is_admin,
-    run_full_system_scan, save_scan_results, upload_scan_results,
+    run_full_system_scan, save_scan_results, upload_scan_results,login,
     quick_system_health_check, run_directory_scan, update_progress, test_backend_connection
 )
 
 class SecurityScannerGUI:
     def __init__(self, root):
+
         self.root = root
         self.root.title("Windows Security Scanner")
         self.root.geometry("1000x700")
         self.root.minsize(900, 650)
+
         # Backend Connection settings and authentication
         self.backend_url_var = tk.StringVar(value="http://localhost:5000")
         self.username_var = tk.StringVar()
         self.password_var = tk.StringVar()
         self.authenticated = False
+        self.token = None  # Store JWT token
 
         # Apply modern theme
         self.theme = ttkth.ThemedStyle(self.root)
         self.theme.set_theme("arc")  # Modern flat theme
 
-
-
-        
         # Set icon
         try:
             self.root.iconbitmap("shield.ico")  # You'll need to create/download this icon
         except:
             pass  # Icon not found, continue without it
-        
+
         # Colors
         self.bg_color = "#f5f5f5"
         self.accent_color = "#3498db"
         self.danger_color = "#e74c3c"
         self.success_color = "#2ecc71"
         self.warning_color = "#f39c12"
-        
+
         # Configure root background
         self.root.configure(bg=self.bg_color)
-        
+
         # Scan results
         self.scan_results = None
         self.scan_thread = None
         self.scan_type = None
-        
+
+        # Create main frames: login frame and main app frame
+        self.login_frame = ttk.Frame(self.root)
+        self.main_frame = ttk.Frame(self.root)
+
+        # Start with login frame visible
+        self.login_frame.pack(fill=tk.BOTH, expand=True)
+
         self.create_widgets()
+
+        # Check admin status
         self.check_admin_status()
-        
+
+
     def create_widgets(self):
         """Create all GUI elements"""
         # Main frame
@@ -773,6 +783,8 @@ class SecurityScannerGUI:
                 self.log("Performing quick system health check...")
                 self.scan_results = quick_system_health_check(
                 )
+
+
                 
             elif scan_type == "directory":
                 directory = self.directory_var.get()
@@ -780,10 +792,13 @@ class SecurityScannerGUI:
                 self.scan_results = run_directory_scan(
                     directory
                 )
+                print(self.scan_results)
+
                 
             elif scan_type == "full":
                 self.log("Performing full system scan. This may take a while...")
                 self.scan_results = run_full_system_scan()
+
                 
             # Update UI with results
             self.root.after(0, self.display_scan_results)
@@ -795,11 +810,8 @@ class SecurityScannerGUI:
                     f"scan_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
                 )
                 self.save_scan_results_to_file(save_path)
-                
-            # Auto-upload if configured
-            if self.auto_upload_var.get():
-                self.upload_scan_results_to_server()
-                
+                upload_scan_results(self.scan_results,scan_type)
+
         except Exception as e:
             self.log(f"Error during scan: {str(e)}")
             
@@ -936,61 +948,25 @@ class SecurityScannerGUI:
         
         if save_path:
             self.save_scan_results_to_file(save_path)
-            
+
     def save_scan_results_to_file(self, save_path):
         """Save scan results to specified file path"""
         try:
             save_scan_results(self.scan_results, save_path)
             self.log(f"Scan results saved to: {save_path}")
             self.status_bar.config(text=f"Results saved to: {os.path.basename(save_path)}")
+
         except Exception as e:
             self.log(f"Error saving results: {str(e)}")
             messagebox.showerror("Save Error", f"Failed to save results: {str(e)}")
-            
+
     def upload_results(self):
         """Upload scan results to server"""
         if not self.scan_results:
             messagebox.showwarning("No Results", "No scan results available to upload.")
             return
-            
-        self.upload_scan_results_to_server()
 
-    def upload_scan_results_to_server(self):
-        """Upload scan results to configured server"""
-        try:
-            if not self.authenticated:
-                messagebox.showwarning("Authentication Required", "Please login first.")
-                return
-
-            if not self.scan_results:
-                messagebox.showwarning("No Data", "No scan results to upload.")
-                return
-
-            backend_url = self.backend_url_var.get()
-            self.log(f"Uploading results to server: {backend_url}")
-            self.status_bar.config(text="Uploading results...")
-
-            # Format the scan data
-            scan_data = {
-                "scan_type": self.scan_type,  # 'full_health', 'full_scan', or 'custom_scan'
-                "results": self.scan_results,
-                "scanned_files": self.scanned_files if hasattr(self, 'scanned_files') else []
-            }
-
-            response = upload_scan_results(scan_data, backend_url)
-
-            if response.get("success"):
-                self.log("Results uploaded successfully.")
-                self.status_bar.config(text="Results uploaded successfully.")
-                messagebox.showinfo("Upload Complete", "Scan results uploaded successfully.")
-            else:
-                error_msg = response.get("error", "Unknown error")
-                self.log(f"Upload failed: {error_msg}")
-                messagebox.showerror("Upload Failed", f"Failed to upload results: {error_msg}")
-        except Exception as e:
-            self.log(f"Error uploading results: {str(e)}")
-            messagebox.showerror("Upload Error", f"Failed to upload results: {str(e)}")
-
+        #self.upload_scan_results_to_server()
     def test_backend_connection(self):
         """Test connection to backend server"""
         try:

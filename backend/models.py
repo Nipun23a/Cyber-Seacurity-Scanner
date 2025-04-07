@@ -13,9 +13,10 @@ class SeverityLevel(Enum):
     CRITICAL = 'critical'
 
 class ScanType(Enum):
-    HealthCheck = 'healthcheck'
-    FullScan = 'fullscan'
-    DirectScan = 'directscan'
+    QUICK = 'quick'
+    DIRECTORY = 'directory'
+    FULL = 'full'
+
 
 # User Model
 class User(db.Model):
@@ -48,7 +49,6 @@ class Scan(db.Model):
     severity = db.Column(db.Enum(SeverityLevel), nullable=True)
     scan_details = db.relationship("ScanDetails", backref="scan", lazy=True)
     recommendations = db.relationship('Recommendations', backref="scan", lazy=True)
-    files = db.relationship("Files", backref="scan", lazy=True)
 
 # Scan Details Model
 class ScanDetails(db.Model):
@@ -71,9 +71,10 @@ class Recommendations(db.Model):
 class Files(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    scan_type = db.Column(db.Enum(ScanType),nullable=False)
-    file_path = db.Column(db.String(255), nullable=False)
+    scan_type = db.Column(db.Enum(ScanType), nullable=False)
+    scan_result = db.Column(db.Text, nullable=False)
     upload_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 # Activity Log Model
 class ActivityLog(db.Model):
