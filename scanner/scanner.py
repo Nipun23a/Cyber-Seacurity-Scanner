@@ -152,7 +152,6 @@ def get_malware_signatures():
     return {
         "e99a18c428cb38d5f260853678922e03": "Trojan.Generic",
         "c157a79031e1c40f85931829bc5fc552": "Ransomware.WannaCry",
-        "d41d8cd98f00b204e9800998ecf8427e": "EmptyFile.Suspicious",
         "5f4dcc3b5aa765d61d8327deb882cf99": "Malware.Password",
         "25f9e794323b453885f5181f1b624d0b": "Trojan.Downloader",
         "827ccb0eea8a706c4c34a16891f84e7b": "Backdoor.Remote",

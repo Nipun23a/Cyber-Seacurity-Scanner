@@ -3,10 +3,113 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@radix-ui/react-progress";
 import { ShieldIcon, AlertCircle, HardDrive, Activity, CheckCircle, Zap
 } from "lucide-react";
+import { useEffect, useState } from "react";
+
+interface ScanResult {
+  id: number;
+  scan_type: string;
+  scan_result: string;
+  uploaded_at: string;
+}
+
+
+
 
 function Dashboard() {
+    const [scanResults, setScanResults] = useState<ScanResult[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState("");
+
+
+
+    const getUserScanResults = async () => {
+      try{
+        setLoading(true);
+        const token = localStorage.getItem("authToken");
+        const response = await fetch(`http://localhost:5000/scan/result`,{
+          headers:{
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          }
+        });
+        const data = await response.json();
+        if(data.success){
+          console.log(data.results);
+          setScanResults(data.results);
+        }else{
+          setError(data.message || "Failed to fetch scan results");
+        }
+      }catch(error){
+        setError("An error occurred while fetching scan results");
+        console.error(error);
+      }finally{
+        setLoading(false);
+      }
+    };
+
+
+    useEffect(() => {
+      getUserScanResults();}, []);
+
+    // Calculate security score based on scan results
+  const calculateSecurityScore = (): number => {
+    if (scanResults.length === 0) return 76; // Default score if no scans available
+    
+    // Get the most recent scan result
+    const latestScan = scanResults[0];
+    let score = 100; // Start with perfect score
+    
+    try {
+      // Parse the scan_result if it's a string
+      const resultData = typeof latestScan.scan_result === 'string' 
+        ? JSON.parse(latestScan.scan_result) 
+        : latestScan.scan_result;
+      
+      if (latestScan.scan_type === 'directory' && resultData.directory_scan) {
+        const infectedCount: number = resultData.directory_scan.infected_files?.length || 0;
+        const scannedFiles: number = resultData.directory_scan.stats?.scanned_files || 0;
+        const skippedFiles: number = resultData.directory_scan.stats?.skipped_files || 0;
+        const relevantFiles: number = scannedFiles - skippedFiles;
+        
+        if (relevantFiles > 0) {
+          // Calculate infection rate as a percentage
+          const infectionRate: number = (infectedCount / relevantFiles) * 100;
+          // Convert infection rate to security score (higher infection = lower score)
+          score = Math.max(0, Math.round(100 - infectionRate));
+        }
+      } else if (latestScan.scan_type === 'quick' && resultData.quick_scan) {
+        // Similar calculation for quick scan if available
+        const infectedCount: number = resultData.quick_scan.infected_files?.length || 0;
+        const scannedFiles: number = resultData.quick_scan.stats?.scanned_files || 0;
+        const skippedFiles: number = resultData.quick_scan.stats?.skipped_files || 0;
+        const relevantFiles: number = scannedFiles - skippedFiles;
+        
+        if (relevantFiles > 0) {
+          const infectionRate: number = (infectedCount / relevantFiles) * 100;
+          score = Math.max(0, Math.round(100 - infectionRate));
+        }
+      } else if (latestScan.scan_type === 'full' && resultData.full_scan) {
+        // Similar calculation for full scan if available
+        const infectedCount: number = resultData.full_scan.infected_files?.length || 0;
+        const scannedFiles: number = resultData.full_scan.stats?.scanned_files || 0;
+        const skippedFiles: number = resultData.full_scan.stats?.skipped_files || 0;
+        const relevantFiles: number = scannedFiles - skippedFiles;
+        
+        if (relevantFiles > 0) {
+          const infectionRate: number = (infectedCount / relevantFiles) * 100;
+          score = Math.max(0, Math.round(100 - infectionRate));
+        }
+      }
+      
+      return score;
+    } catch (err) {
+      console.error("Error calculating security score:", err);
+      return 76; // Default fallback score
+    }
+  };
+
     // Sample data for dashboard
-    const securityScore = 76;
+    const securityScore = calculateSecurityScore(); // Calculate security score based on scan results
     const vulnerabilities = [
       { id: 1, severity: "high", issue: "Outdated software detected", system: "Windows 10 Enterprise", status: "open" },
       { id: 2, severity: "medium", issue: "Weak password policy", system: "User accounts", status: "open" },

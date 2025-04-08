@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from database import db
+from sqlalchemy import desc
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import os
 import traceback
@@ -82,3 +83,32 @@ def upload_scan():
         print(f"[Upload] Error in upload_scan: {str(e)}")
         print(f"[Upload] Traceback: {error_traceback}")
         return jsonify({"success": False, "error": str(e)}), 500 
+
+@upload_bp.route('/result', methods=['GET'])
+@jwt_required()
+def get_scan_result():
+    current_user_id = get_jwt_identity()
+    try:
+        # Get Scan Result Based on User ID
+        scan_results = Files.query.filter_by(user_id=current_user_id).order_by(desc(Files.upload_at)).all()
+        if not scan_results:
+            return jsonify({"success": False, "message": "No scan results found for this user"}), 404
+        
+        # Serialize the results
+        results = []
+        for scan in scan_results:
+            results.append({
+                "id": scan.id,
+                "scan_type": scan.scan_type.value,  # Assuming ScanType is an Enum
+                "scan_result": scan.scan_result,
+                "upload_at": scan.upload_at.isoformat()
+            })
+        
+        return jsonify({"success": True, "results": results}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error retrieving scan results: {str(e)}"}), 500
+
+
+        
+
+

@@ -13,9 +13,9 @@ class SeverityLevel(Enum):
     CRITICAL = 'critical'
 
 class ScanType(Enum):
-    QUICK = 'quick'
-    DIRECTORY = 'directory'
-    FULL = 'full'
+    quick = 'quick'
+    directory = 'directory'
+    full = 'full'
 
 
 # User Model
