@@ -84,6 +84,59 @@ def upload_scan():
         print(f"[Upload] Traceback: {error_traceback}")
         return jsonify({"success": False, "error": str(e)}), 500 
 
+@upload_bp.route('/upload-network', methods=['POST'])
+@jwt_required()
+def upload_network_scan():
+    current_user_id = get_jwt_identity()
+    try:
+        print(f"[Upload] Starting network scan upload process for user {current_user_id}")
+
+        if not request.data:
+            print("[Upload] Error: No data provided in request")
+            return jsonify({"success": False, "error": "No data provided in request"}), 400
+
+        if not request.is_json:
+            print(f"[Upload] Error: Invalid content type - {request.content_type}")
+            return jsonify({"success": False,
+                            "error": f"Expected content type 'application/json', got '{request.content_type}'"}), 415
+
+        data = request.get_json()
+        if data is None:
+            print("[Upload] Error: Invalid JSON format")
+            return jsonify({"success": False, "error": "Invalid JSON format"}), 400
+
+        # Check for required fields
+        if 'network_scan_result' not in data:
+            print("[Upload] Error: Missing network_scan_result field")
+            return jsonify({"success": False, "error": "Missing required field: network_scan_result"}), 422
+
+        network_scan_result = data['network_scan_result']
+
+        # Store the network scan result as a JSON string
+        network_scan_result_json = json.dumps(network_scan_result)
+
+        # Create and save the new file record
+        new_file = CheckNetwork(
+            user_id=current_user_id,
+            scan_result=network_scan_result_json  # Store the scan result as JSON string
+        )
+        db.session.add(new_file)
+        db.session.commit()
+
+        print(f"[Upload] Successfully saved network scan result to database")
+
+        return jsonify({
+            "success": True,
+            "message": "Network scan results uploaded successfully"
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        error_traceback = traceback.format_exc()
+        print(f"[Upload] Error in upload_network_scan: {str(e)}")
+        print(f"[Upload] Traceback: {error_traceback}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @upload_bp.route('/result', methods=['GET'])
 @jwt_required()
 def get_scan_result():

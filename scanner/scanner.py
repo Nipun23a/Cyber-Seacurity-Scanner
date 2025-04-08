@@ -274,6 +274,7 @@ def scan_open_ports():
     return open_ports
 
 
+
 # Function: Scan Installed Software with vulnerability check
 def scan_installed_software():
     print(f"{Fore.CYAN}[*] Scanning installed software...{Style.RESET_ALL}")
@@ -396,11 +397,6 @@ def run_full_system_scan():
 
     # Collect all scan results
     scan_results = {
-        "system_info": get_system_info(),
-        "defender_status": get_defender_status(),
-        "firewall_status": check_firewall_status(),
-        "open_ports": scan_open_ports(),
-        "installed_software": scan_installed_software(),
         "drive_scans": {}
     }
 
@@ -496,6 +492,68 @@ def upload_scan_results(scan_result, scan_type):
     except Exception as e:
         return {"success": False, "error": f"Unknown error: {str(e)}"}
 
+def upload_network_scan_results(network_scan_result):
+    headers = {}
+
+    # Handle Authorization header using internal TOKEN constant
+    if TOKEN:
+        headers['Authorization'] = TOKEN if TOKEN.startswith("Bearer ") else f"Bearer {TOKEN}"
+    else:
+        print("WARNING: No auth token provided - authentication will fail!")
+
+    try:
+        # Prepare the JSON data directly
+        json_data = {
+            'network_scan_result': network_scan_result,
+        }
+
+        print("Creating JSON data:", json_data)
+        # Endpoint
+        endpoint = f"{BACKEND_URL.rstrip('/')}/scan/upload-network"
+
+        # Set content type to application/json
+        headers['Content-Type'] = 'application/json'
+
+        # Debug
+        print(f"Sending data to: {endpoint}")
+        print(f"Headers: {headers}")
+
+        # Send POST request with JSON data
+        response = requests.post(
+            endpoint,
+            headers=headers,
+            json=json_data  # Use json parameter to automatically serialize
+        )
+
+        # Debug
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {response.text}")
+
+        if response.status_code == 401:
+            return {
+                "success": False,
+                "error": "Authentication failed. Your session may have expired. Please login again."
+            }
+
+        try:
+            result = response.json()
+        except json.JSONDecodeError:
+            return {
+                "success": False,
+                "error": f"Server returned non-JSON response: {response.text}"
+            }
+
+        if response.status_code in (200, 201):
+            return result
+        else:
+            return {"success": False, "error": result.get("error", f"HTTP Error: {response.status_code}")}
+
+    except requests.RequestException as e:
+        return {"success": False, "error": f"Request failed: {str(e)}"}
+    except Exception as e:
+        return {"success": False, "error": f"Unknown error: {str(e)}"}
+
+
 
 # Function: Get quick system health check
 def quick_system_health_check():
@@ -513,10 +571,11 @@ def quick_system_health_check():
         }
 
     results = {
-        "system_info": system_info,
+        "system_info": get_system_info(),
         "defender_status": get_defender_status(),
         "firewall_status": check_firewall_status(),
-        "open_ports": scan_open_ports()
+        "open_ports": scan_open_ports(),
+        "installed_software": scan_installed_software(),
     }
 
     # Check for admin directories

@@ -50,11 +50,6 @@ function Header() {
               <Download className = 'h-4 w-4 mr-2' />
               <span>Download Application</span>
             </Button>
-            <Button variant="outline" size="sm" className="flex items-center">
-              <Bell className="h-4 w-4 mr-2" />
-              <span>Alerts</span>
-            </Button>
-            
             <div className="flex items-center space-x-2">
               <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
                 {initials}

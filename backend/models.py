@@ -75,6 +75,13 @@ class Files(db.Model):
     scan_result = db.Column(db.Text, nullable=False)
     upload_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+# Check Network Model Scan
+class CheckNetwork(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    network_scan_result = db.Column(db.Text, nullable=False)
+    upload_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 # Activity Log Model
 class ActivityLog(db.Model):

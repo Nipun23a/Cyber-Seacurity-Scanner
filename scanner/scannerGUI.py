@@ -16,7 +16,7 @@ import ttkthemes as ttkth
 from scanner import (
     get_system_info, get_defender_status, check_firewall_status,
     scan_open_ports, scan_installed_software, scan_files, is_admin,
-    run_full_system_scan, save_scan_results, upload_scan_results,login,
+    run_full_system_scan, save_scan_results, upload_scan_results,login,upload_network_scan_results,
     quick_system_health_check, run_directory_scan, update_progress, test_backend_connection
 )
 
@@ -810,7 +810,10 @@ class SecurityScannerGUI:
                     f"scan_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
                 )
                 self.save_scan_results_to_file(save_path)
-                upload_scan_results(self.scan_results,scan_type)
+                if scan_type == "quick":
+                    upload_network_scan_results(self.scan_results)
+                else:
+                    upload_scan_results(self.scan_results,scan_type)
 
         except Exception as e:
             self.log(f"Error during scan: {str(e)}")
