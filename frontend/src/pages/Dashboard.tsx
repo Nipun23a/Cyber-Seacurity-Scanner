@@ -108,8 +108,38 @@ function Dashboard() {
     }
   };
 
+  // Count active threats from scan results
+const countActiveThreats = (): number => {
+  if (scanResults.length === 0) return 0; // No threats if no scans available
+  
+  // Scan through all results to find infected files
+  let totalThreats = 0;
+  
+  for (const scan of scanResults) {
+    try {
+      // Parse the scan_result if it's a string
+      const resultData = typeof scan.scan_result === 'string' 
+        ? JSON.parse(scan.scan_result) 
+        : scan.scan_result;
+      
+      if (scan.scan_type === 'directory' && resultData.directory_scan) {
+        totalThreats += resultData.directory_scan.infected_files?.length || 0;
+      } else if (scan.scan_type === 'quick' && resultData.quick_scan) {
+        totalThreats += resultData.quick_scan.infected_files?.length || 0;
+      } else if (scan.scan_type === 'full' && resultData.full_scan) {
+        totalThreats += resultData.full_scan.infected_files?.length || 0;
+      }
+    } catch (err) {
+      console.error("Error counting threats in scan result:", err);
+    }
+  }
+  
+  return totalThreats;
+};
+
     // Sample data for dashboard
     const securityScore = calculateSecurityScore(); // Calculate security score based on scan results
+    const activeThreats = countActiveThreats();
     const vulnerabilities = [
       { id: 1, severity: "high", issue: "Outdated software detected", system: "Windows 10 Enterprise", status: "open" },
       { id: 2, severity: "medium", issue: "Weak password policy", system: "User accounts", status: "open" },
@@ -130,11 +160,39 @@ function Dashboard() {
         default: return "text-gray-600 bg-gray-50";
       }
     };
+
+    const getLastScanTime = (): string => {
+      if (scanResults.length === 0) return "No scans";
+      
+      // Get the most recent scan
+      const latestScan = scanResults[0];
+      const uploadTime = new Date(latestScan.upload_at);
+      const currentTime = new Date();
+      
+      // Calculate time difference in milliseconds
+      const diffMs = currentTime.getTime() - uploadTime.getTime();
+      
+      // Convert to minutes, hours, days
+      const diffMinutes = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / (60000 * 60));
+      const diffDays = Math.floor(diffMs / (60000 * 60 * 24));
+      
+      // Return appropriate string based on elapsed time
+      if (diffDays > 0) {
+        return `${diffDays}d ago`;
+      } else if (diffHours > 0) {
+        return `${diffHours}h ago`;
+      } else if (diffMinutes > 0) {
+        return `${diffMinutes}m ago`;
+      } else {
+        return "Just now";
+      }
+    };
     
     return (
-      <div className="space-y-6">
+      <div className="space-y-10">
         {/* Top Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -155,48 +213,37 @@ function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Active Threats</p>
-                  <h3 className="text-2xl font-bold mt-1">2</h3>
+                  <h3 className="text-2xl font-bold mt-1">{activeThreats}</h3>
                 </div>
                 <div className="p-3 rounded-full bg-red-100">
                   <AlertCircle className="h-6 w-6 text-red-600" />
                 </div>
               </div>
-              <div className="mt-4 text-sm text-red-600">
-                2 critical issues need your attention
-              </div>
+              {activeThreats > 0 && (
+                <div className="mt-4 text-sm text-red-600">
+                  {activeThreats} critical issue{activeThreats > 1 ? 's' : ''} need{activeThreats === 1 ? 's' : ''} your attention
+                </div>
+              )}
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Protected Devices</p>
-                  <h3 className="text-2xl font-bold mt-1">5/8</h3>
-                </div>
-                <div className="p-3 rounded-full bg-blue-100">
-                  <HardDrive className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-              <div className="mt-4 text-sm text-blue-600">
-                3 devices need security updates
-              </div>
-            </CardContent>
-          </Card>
-          
+           
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Last Scan</p>
-                  <h3 className="text-2xl font-bold mt-1">2h ago</h3>
+                  <h3 className="text-2xl font-bold mt-1">
+                    {loading ? "Loading..." : getLastScanTime()}
+                  </h3>
                 </div>
                 <div className="p-3 rounded-full bg-indigo-100">
                   <Activity className="h-6 w-6 text-indigo-600" />
                 </div>
               </div>
               <div className="mt-4 text-sm text-indigo-600">
-                Next scan scheduled in 22h
+                {loading ? "Loading..." : scanResults.length > 0 
+                  ? `${scanResults[0].scan_type.charAt(0).toUpperCase() + scanResults[0].scan_type.slice(1)} scan completed` 
+                  : "No recent scans"}
               </div>
             </CardContent>
           </Card>
