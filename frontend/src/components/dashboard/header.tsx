@@ -1,4 +1,4 @@
-import { Bell, Download } from "lucide-react";
+import {  Download } from "lucide-react";
 import { Button } from "../ui/button";
 import axios from "axios";
 

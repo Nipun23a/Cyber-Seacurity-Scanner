@@ -1,3 +1,4 @@
+import MalwareBanner from "@/components/dashboard/malwareBaneer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@radix-ui/react-progress";
@@ -235,6 +236,7 @@ const countActiveThreats = (): number => {
     return (
       <div className="space-y-10">
         {/* Top Stats Cards */}
+        <MalwareBanner activeThreatCount={activeThreats} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardContent className="pt-6">

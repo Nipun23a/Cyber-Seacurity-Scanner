@@ -15,6 +15,7 @@ from werkzeug.utils import secure_filename
 
 from models import Scan
 from models import Files
+from models import CheckNetwork
 
 upload_bp = Blueprint('upload', __name__)
 

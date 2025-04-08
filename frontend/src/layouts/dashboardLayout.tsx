@@ -4,6 +4,7 @@ import Sidebar from "@/components/dashboard/sidebar.tsx";
 import Dashboard from "@/pages/Dashboard.tsx";
 import Header from "@/components/dashboard/header.tsx";
 import ProfileSection from "@/pages/Profile.tsx";
+import MalwarePage from "@/pages/Malware";
 
 interface DashboardLayoutProps {
     children?: React.ReactNode;
@@ -38,6 +39,7 @@ export default function DashboardLayout({ children, onLogout }: DashboardLayoutP
                     <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/profile" element={<ProfileSection />} />
+                        <Route path="/malware" element={<MalwarePage/>}/>
                         
                         {/* Add more routes for other sections as needed */}
                     </Routes>

@@ -1,4 +1,4 @@
-import { Bell, BookOpen, Bug, ChevronRight, HardDrive, Home, LogOut, Search, Settings, Shield, User, Wifi } from "lucide-react";
+import { Bell, BookOpen, Bug, ChevronRight, Home, LogOut, Shield, User, Wifi } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import React from "react";
@@ -23,14 +23,10 @@ function Sidebar({ collapsed, setCollapsed, onLogout }: {
    
     const menuItems = [
       { id: "dashboard", icon: Home, label: "Dashboard", path: "/dashboard" },
-      { id: "scanner", icon: Search, label: "Vulnerability Scanner", path: "/dashboard/scanner" },
       { id: "malware", icon: Bug, label: "Malware Detection", path: "/dashboard/malware" },
       { id: "network", icon: Wifi, label: "Network Security", path: "/dashboard/network" },
-      { id: "devices", icon: HardDrive, label: "Device Management", path: "/dashboard/devices" },
-      { id: "reports", icon: BookOpen, label: "Security Reports", path: "/dashboard/reports" },
       { id: "education", icon: BookOpen, label: "Security Education", path: "/dashboard/education" },
       { id: "alerts", icon: Bell, label: "Threat Alerts", path: "/dashboard/alerts" },
-      { id: "settings", icon: Settings, label: "Settings", path: "/dashboard/settings" },
     ];
 
     // Handle navigation

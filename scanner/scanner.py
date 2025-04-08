@@ -157,7 +157,18 @@ def get_malware_signatures():
         "827ccb0eea8a706c4c34a16891f84e7b": "Backdoor.Remote",
         "e10adc3949ba59abbe56e057f20f883e": "Keylogger.Common",
         "098f6bcd4621d373cade4e832627b4f6": "Worm.Network",
+        "00000000000000000000000000000000": "Suspicious.EmptyHash",
+        "ffffffffffffffffffffffffffffffff": "Obfuscated.FakeHash",
+        "1d56a37fb6b08aa709fe90e12ca59e12": "PUP.ToolbarInstaller",
+        "7c6a180b36896a0a8c02787eeafb0e4c": "Adware.PopUpBomb",
+        "d41d8cd98f00b204e9800998ecf8427e": "Empty.File",
+        "45c48cce2e2d7fbdea1afc51c7c6ad26": "Spyware.ScreenWatcher",
+        "3d4fe7c9af83ee5466a0ec61b6a3fbdc": "Trojan.Injector",
+        "6c569aabbf7775ef8fc570e228c16b98": "Rootkit.StealthMode",
+        "3c59dc048e8850243be8079a5c74d079": "Malicious.Script.Loop",
+        "21232f297a57a5a743894a0e4a801fc3": "BruteForce.HashList"
     }
+
 
 
 # Function: Scan Files for Malware Signatures (Enhanced)
