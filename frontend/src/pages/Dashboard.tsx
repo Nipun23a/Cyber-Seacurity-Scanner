@@ -146,12 +146,6 @@ const countActiveThreats = (): number => {
       { id: 3, severity: "low", issue: "Non-essential ports open", system: "Network firewall", status: "resolved" },
     ];
     
-    const scanHistory = [
-      { id: 1, date: "April 05, 2025", type: "Full System Scan", findings: 3, duration: "14 minutes" },
-      { id: 2, date: "April 02, 2025", type: "Quick Scan", findings: 1, duration: "5 minutes" },
-      { id: 3, date: "March 28, 2025", type: "Network Scan", findings: 4, duration: "8 minutes" },
-    ];
-  
     const getSeverityColor = (severity: string) => {
       switch (severity) {
         case "high": return "text-red-600 bg-red-50";
@@ -188,6 +182,55 @@ const countActiveThreats = (): number => {
         return "Just now";
       }
     };
+
+    // Function to format scan history data from API results
+    const formatScanHistory = () => {
+      return scanResults.map((scan) => {
+        // Parse the scan_result JSON if it's a string
+        const resultData = typeof scan.scan_result === 'string' 
+          ? JSON.parse(scan.scan_result) 
+          : scan.scan_result;
+        
+        // Format the date
+        const date = new Date(scan.upload_at);
+        const formattedDate = date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: '2-digit' 
+        });
+        
+        // Extract findings and duration based on scan type
+        let findings = 0;
+        let duration = "N/A";
+        
+        if (scan.scan_type === 'directory' && resultData.directory_scan) {
+          findings = resultData.directory_scan.infected_files?.length || 0;
+          duration = `${resultData.directory_scan.stats?.scan_duration_seconds.toFixed(2) || 0} seconds`;
+        } else if (scan.scan_type === 'quick' && resultData.quick_scan) {
+          findings = resultData.quick_scan.infected_files?.length || 0;
+          duration = `${resultData.quick_scan.stats?.scan_duration_seconds.toFixed(2) || 0} seconds`;
+        } else if (scan.scan_type === 'full' && resultData.full_scan) {
+          findings = resultData.full_scan.infected_files?.length || 0;
+          duration = `${resultData.full_scan.stats?.scan_duration_seconds.toFixed(2) || 0} seconds`;
+        }
+        
+        // Capitalize scan type for display
+        const displayType = scan.scan_type.charAt(0).toUpperCase() + scan.scan_type.slice(1) + " Scan";
+        
+        return {
+          id: scan.id,
+          date: formattedDate,
+          type: displayType,
+          findings: findings,
+          duration: duration
+        };
+      });
+    };
+
+    // Then in your component:
+    const scanHistory = formatScanHistory();
+
+    
     
     return (
       <div className="space-y-10">
@@ -295,23 +338,31 @@ const countActiveThreats = (): number => {
               <CardDescription>Recent security scans performed</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {scanHistory.map((scan) => (
-                  <div key={scan.id} className="p-3 bg-white border rounded-lg flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center">
-                        <Zap className="h-4 w-4 text-blue-600 mr-2" />
-                        <p className="font-medium">{scan.type}</p>
+              {loading ? (
+                <div className="text-center py-6">Loading scan history...</div>
+              ) : error ? (
+                <div className="text-center py-6 text-red-500">{error}</div>
+              ) : scanResults.length === 0 ? (
+                <div className="text-center py-6">No scan history available</div>
+              ) : (
+                <div className="space-y-2">
+                  {formatScanHistory().map((scan) => (
+                    <div key={scan.id} className="p-3 bg-white border rounded-lg flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center">
+                          <Zap className="h-4 w-4 text-blue-600 mr-2" />
+                          <p className="font-medium">{scan.type}</p>
+                        </div>
+                        <p className="text-sm text-gray-500">{scan.date}</p>
                       </div>
-                      <p className="text-sm text-gray-500">{scan.date}</p>
+                      <div className="text-right">
+                        <p className="text-sm">{scan.findings} {scan.findings === 1 ? 'issue' : 'issues'} found</p>
+                        <p className="text-xs text-gray-500">Duration: {scan.duration}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm">{scan.findings} issues found</p>
-                      <p className="text-xs text-gray-500">Duration: {scan.duration}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
               <Button variant="outline" className="w-full mt-4">
                 View Full Scan History
               </Button>
