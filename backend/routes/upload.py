@@ -81,4 +81,4 @@ def upload_scan():
         error_traceback = traceback.format_exc()
         print(f"[Upload] Error in upload_scan: {str(e)}")
         print(f"[Upload] Traceback: {error_traceback}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500 
