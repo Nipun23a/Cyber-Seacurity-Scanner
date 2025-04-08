@@ -1,0 +1,44 @@
+1. Unzip the project.
+
+2. Open Command Line or Terminal and change the directory to the backend:
+   cd backend
+
+3. Activate the Python virtual environment:
+   - If there is no `.venv` file, create one:
+     python -m venv .venv
+   - Activate the virtual environment:
+     - On Windows: .venv\Scripts\activate
+     - On macOS/Linux: source .venv/bin/activate
+
+4. Install requirements in both backend and scanner folder:
+   pip install -r requirements.txt
+   cd ../scanner
+   pip install -r requirements.txt
+
+5. Change directory back to backend:
+   cd ../backend
+
+6. If there is no database created, initialize the database:
+   flask db init
+   flask db migrate
+   flask db upgrade
+
+   - Note: SQLite is required to test locally.
+   - For production on a server, use PostgreSQL instead.
+
+7. Run the backend application:
+   flask run
+
+8. Open another terminal, change the directory to frontend:
+   cd frontend
+
+9. Install frontend dependencies:
+   npm install
+
+10. Run the frontend application:
+    npm run dev
+
+11. For production:
+    - Backend can be hosted on Heroku
+    - Frontend can be hosted on Vercel
+    - After hosting, update the API URLs in the frontend code according to the backend URL
