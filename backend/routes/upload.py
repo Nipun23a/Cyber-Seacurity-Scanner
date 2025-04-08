@@ -119,7 +119,7 @@ def upload_network_scan():
         # Create and save the new file record
         new_file = CheckNetwork(
             user_id=current_user_id,
-            scan_result=network_scan_result_json  # Store the scan result as JSON string
+            network_scan_result=network_scan_result_json  # Correct field name
         )
         db.session.add(new_file)
         db.session.commit()
@@ -161,6 +161,33 @@ def get_scan_result():
         return jsonify({"success": True, "results": results}), 200
     except Exception as e:
         return jsonify({"success": False, "message": f"Error retrieving scan results: {str(e)}"}), 500
+
+@upload_bp.route('/network-result', methods=['GET'])
+@jwt_required()
+def get_network_scan_result():
+    current_user_id = get_jwt_identity()
+    try:
+        # Get Scan Result Based on User ID
+        network_scan_results = CheckNetwork.query.filter_by(user_id=current_user_id).order_by(desc(CheckNetwork.upload_at)).all()
+        
+        if not network_scan_results:
+            return jsonify({"success": False, "message": "No scan results found for this user"}), 404
+        
+        # Serialize the results
+        results = []
+        for scan in network_scan_results:
+            results.append({
+                "id": scan.id,
+                "network_scan_result": scan.network_scan_result,
+                "upload_at": scan.upload_at.isoformat()
+            })
+        
+        return jsonify({"success": True, "results": results}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error retrieving scan results: {str(e)}"}), 500
+
+
+
 
 
         

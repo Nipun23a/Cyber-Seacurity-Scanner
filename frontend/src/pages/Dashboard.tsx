@@ -1,8 +1,8 @@
 import MalwareBanner from "@/components/dashboard/malwareBaneer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Progress } from "@radix-ui/react-progress";
-import { ShieldIcon, AlertCircle, HardDrive, Activity, CheckCircle, Zap
+import { Progress } from "@/components/ui/progress";
+import { ShieldIcon, AlertCircle,  Activity, CheckCircle, Zap
 } from "lucide-react";
 import { useEffect, useState } from "react";
 

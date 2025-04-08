@@ -24,9 +24,8 @@ function Sidebar({ collapsed, setCollapsed, onLogout }: {
     const menuItems = [
       { id: "dashboard", icon: Home, label: "Dashboard", path: "/dashboard" },
       { id: "malware", icon: Bug, label: "Malware Detection", path: "/dashboard/malware" },
-      { id: "network", icon: Wifi, label: "Network Security", path: "/dashboard/network" },
+      { id: "network", icon: Wifi, label: "System Security", path: "/dashboard/network" },
       { id: "education", icon: BookOpen, label: "Security Education", path: "/dashboard/education" },
-      { id: "alerts", icon: Bell, label: "Threat Alerts", path: "/dashboard/alerts" },
     ];
 
     // Handle navigation
