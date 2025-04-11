@@ -29,7 +29,7 @@ class SecurityScannerGUI:
         self.root.minsize(900, 650)
 
         # Backend Connection settings and authentication
-        self.backend_url_var = tk.StringVar(value="http://localhost:5000")
+        self.backend_url_var = tk.StringVar(value="https://network-scanner-backend-f6a7ec0a7d2c.herokuapp.com")
         self.username_var = tk.StringVar()
         self.password_var = tk.StringVar()
         self.authenticated = False

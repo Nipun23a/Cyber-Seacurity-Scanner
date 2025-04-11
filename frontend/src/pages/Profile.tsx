@@ -99,8 +99,8 @@ function ProfileSection() {
       }
 
       // Make the API request
-      const response = await axios.post(
-        "http://localhost:5000/auth/change-password",
+      await axios.post(
+        "https://network-scanner-backend-f6a7ec0a7d2c.herokuapp.com/auth/change-password",
         {
           oldPassword,
           newPassword,

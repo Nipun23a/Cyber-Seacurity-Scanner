@@ -10,7 +10,7 @@ interface ScanResult {
   id: number;
   scan_type: string;
   scan_result: string;
-  uploaded_at: string;
+  upload_at: string;
 }
 
 
@@ -27,7 +27,7 @@ function Dashboard() {
       try{
         setLoading(true);
         const token = localStorage.getItem("authToken");
-        const response = await fetch(`http://localhost:5000/scan/result`,{
+        const response = await fetch(`https://network-scanner-backend-f6a7ec0a7d2c.herokuapp.com/scan/result`,{
           headers:{
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -229,7 +229,7 @@ const countActiveThreats = (): number => {
     };
 
     // Then in your component:
-    const scanHistory = formatScanHistory();
+    formatScanHistory();
 
     
     

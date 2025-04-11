@@ -6,7 +6,7 @@ from colorama import Fore, Style
 
 from scanner import login
 
-BACKEND_URL = "http://localhost:5000"
+BACKEND_URL = "https://network-scanner-backend-f6a7ec0a7d2c.herokuapp.com"
 
 
 class LoginFrame(tk.Frame):

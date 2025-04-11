@@ -17,7 +17,7 @@ import jwt
 init()
 
 # Flask Backend URL
-BACKEND_URL = "http://127.0.0.1:5000"  # Change this to your actual backend URL
+BACKEND_URL = "https://network-scanner-backend-f6a7ec0a7d2c.herokuapp.com"  # Change this to your actual backend URL
 TOKEN = ""
 
 

@@ -7,11 +7,6 @@ from loginGUI import LoginFrame
 from scanner import is_admin
 from scannerGUI import SecurityScannerGUI
 
-
-# Import your classes/functions
-
-
-
 class Application:
     def __init__(self, root):
         self.root = root
@@ -35,9 +30,6 @@ class Application:
         self.scanner_gui.authenticated = self.login_frame.authenticated
 
         print(self.scanner_gui.token)
-        # If your scanner needs the token, pass it from login
-        # You can modify LoginFrame to store the token as an instance variable
-        # Example: self.scanner_gui.token = self.login_frame.token
 
 
 def main():

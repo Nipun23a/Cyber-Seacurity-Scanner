@@ -151,7 +151,7 @@ const securityPractices = [
 ];
 
 // YouTube video embed component
-const YouTubeEmbed = ({ videoId }) => (
+const YouTubeEmbed: React.FC<{ videoId: string }> = ({ videoId }) => (
     <div className="relative pb-16 h-0" style={{ paddingBottom: "56.25%" }}>
       <iframe
         className="absolute top-0 left-0 w-full h-full rounded-lg"
@@ -170,7 +170,7 @@ const YouTubeEmbed = ({ videoId }) => (
 function SecurityEducationPage() {
     const [progress, setProgress] = useState(0);
     const [selectedThreat, setSelectedThreat] = useState(threatCategories[0]);
-    const [completed, setCompleted] = useState([]);
+    const [completed, setCompleted] = useState<string[]>([]);
   
     useEffect(() => {
       // Simulate progress based on completed sections
@@ -178,7 +178,7 @@ function SecurityEducationPage() {
       setProgress(newProgress);
     }, [completed]);
   
-    const markAsCompleted = (sectionId) => {
+    const markAsCompleted = (sectionId: string) => {
       if (!completed.includes(sectionId)) {
         setCompleted([...completed, sectionId]);
       }

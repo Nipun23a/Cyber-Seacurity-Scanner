@@ -50,7 +50,7 @@ function RegisterForm({
         setError(null);
 
         try {
-            const response = await axios.post("http://localhost:5000/auth/register", {
+            const response = await axios.post("https://network-scanner-backend-f6a7ec0a7d2c.herokuapp.com/auth/register", {
                 fullName,
                 email,
                 password

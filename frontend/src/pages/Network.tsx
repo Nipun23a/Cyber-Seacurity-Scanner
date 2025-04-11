@@ -5,13 +5,9 @@ import {
   ShieldIcon, 
   AlertCircle, 
   Activity, 
-  Wifi, 
   Globe, 
-  Zap,
   Lock,
   WifiOff,
-  Server,
-  ExternalLink
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -70,7 +66,7 @@ function NetworkSecurity() {
     try {
       setLoading(true);
       const token = localStorage.getItem("authToken");
-      const response = await fetch(`http://localhost:5000/scan/network-result`, {
+      const response = await fetch(`https://network-scanner-backend-f6a7ec0a7d2c.herokuapp.com/scan/network-result`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

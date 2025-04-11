@@ -26,7 +26,7 @@ function LoginForm({ onLoginSuccess }: { onLoginSuccess?: (token: string, user: 
 
 
         try {
-            const response = await axios.post("http://localhost:5000/auth/login", {
+            const response = await axios.post("https://network-scanner-backend-f6a7ec0a7d2c.herokuapp.com/auth/login", {
                 email: emailInput,
                 password: passwordInput,
             })

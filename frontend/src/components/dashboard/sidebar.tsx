@@ -1,4 +1,4 @@
-import { Bell, BookOpen, Bug, ChevronRight, Home, LogOut, Shield, User, Wifi } from "lucide-react";
+import { BookOpen, Bug, ChevronRight, Home, LogOut, Shield, User, Wifi } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import React from "react";

@@ -1,8 +1,8 @@
-"""Initital migration
+"""Initial migration
 
-Revision ID: be94e367c0b4
+Revision ID: 3bbcfb9579a7
 Revises: 
-Create Date: 2025-04-08 08:54:36.873271
+Create Date: 2025-04-11 15:41:16.612417
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'be94e367c0b4'
+revision = '3bbcfb9579a7'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -33,6 +33,14 @@ def upgrade():
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('action', sa.String(length=255), nullable=False),
     sa.Column('timestamp', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('check_network',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('network_scan_result', sa.Text(), nullable=False),
+    sa.Column('upload_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -94,6 +102,7 @@ def downgrade():
     op.drop_table('scan')
     op.drop_table('notification')
     op.drop_table('files')
+    op.drop_table('check_network')
     op.drop_table('activity_log')
     op.drop_table('user')
     # ### end Alembic commands ###
